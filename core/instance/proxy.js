@@ -1,3 +1,5 @@
+import {renderData} from "./render.js";
+
 const arrayProto = Array.prototype
 function defArrayFunc(obj,func,nameSpace,vm) {
     Object.defineProperty(obj,func,{
@@ -44,8 +46,8 @@ function constructObjectProxy(vm,obj,nameSpace) {
                 return obj[prop]
             },
             set:function (value) {
-                console.log(getNameSpace(nameSpace,prop))
-                return obj[prop] = value
+                obj[prop] = value
+                renderData(vm,getNameSpace(nameSpace,prop))
             }
         })
         Object.defineProperty(vm,prop,{
@@ -54,8 +56,8 @@ function constructObjectProxy(vm,obj,nameSpace) {
                 return obj[prop]
             },
             set:function (value) {
-                console.log(getNameSpace(nameSpace,prop))
-                return obj[prop] = value
+                obj[prop] = value
+                renderData(vm,getNameSpace(nameSpace,prop))
             }
         })
         if(obj[prop] instanceof Object){

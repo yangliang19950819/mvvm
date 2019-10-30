@@ -6,8 +6,10 @@
 </head>
 <body>
     <div id="test">
-        你好，{{content}}<br>
-        <span>{{description}}</span>
+        你好，{{content}} {{description}}<br>
+        <span>{{description}}</span><br>
+        <input type="text" v-model="obj.x">
+        <br>{{obj.x}}
     </div>
     <script type="module">
         import Due from "./core/instance";
