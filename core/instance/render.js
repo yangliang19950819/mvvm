@@ -33,6 +33,16 @@ function renderNode(vm,vnode) {
             }
             vnode.elm.nodeValue = result
         }
+    }else if(vnode.nodeType == 1 && vnode.tag == "INPUT"){
+        let templates = vnode2Template.get(vnode);
+        if(templates){
+            for(let i = 0 ;i < templates.length;i++){
+                let templateValue = getTemplateValue([vm._data,vnode.env],templates[i])
+                if(templateValue){
+                    vnode.elm.value = templateValue
+                }
+            }
+        }
     }else {
         for(let i = 0; i < vnode.children.length; i++){
             renderNode(vm,vnode.children[i])
@@ -65,10 +75,25 @@ export  function prepareRender(vm,vnode) {//挂载时使用
     if(vnode.nodeType == 3){
         analysisTemplateString(vnode)
     }
-    if(vnode.nodeType == 1){
+    if(vnode.nodeType == 0){
+        setTemplate2Vnode(vnode.data,vnode);
+        setVnode2Tempalte(vnode.data,vnode)
+    }
+    analysisAttr(vm,vnode)
+    if(vnode.nodeType == 1 || vnode.nodeType == 0){
         for(let i = 0; i < vnode.children.length; i++){
             prepareRender(vm,vnode.children[i])
         }
+    }
+}
+function analysisAttr(vm,vnode) {
+    if(vnode.nodeType != 1){
+        return
+    }
+    let attrNames = vnode.elm.getAttributeNames()
+    if(attrNames.indexOf("v-model") > -1){
+        setTemplate2Vnode(vnode.elm.getAttribute("v-model"),vnode)
+        setVnode2Tempalte(vnode.elm.getAttribute("v-model"),vnode)
     }
 }
 
@@ -107,4 +132,13 @@ function getTemplateName(tempalte) {
         return tempalte
     }
 
+}
+
+export function getVNodeByTemplate(template) {
+    return tempalte2Vnode.get(template)
+}
+
+export function clearMap() {
+    tempalte2Vnode.clear();
+    vnode2Template.clear()
 }

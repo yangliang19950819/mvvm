@@ -1,5 +1,6 @@
 import {renderData} from "./render.js";
-
+import {rebuild} from "./mount.js"
+import {getValue} from "../util/ObjectUtil.js";
 const arrayProto = Array.prototype
 function defArrayFunc(obj,func,nameSpace,vm) {
     Object.defineProperty(obj,func,{
@@ -8,7 +9,8 @@ function defArrayFunc(obj,func,nameSpace,vm) {
         value:function (...args) {
             let originl = arrayProto[func]
             const result = originl.apply(this,args)
-            console.log(getNameSpace(nameSpace,""))
+            rebuild(vm,getNameSpace(nameSpace,""))
+            renderData(vm,getNameSpace(nameSpace,""))
             return result
         }
     })
@@ -57,14 +59,19 @@ function constructObjectProxy(vm,obj,nameSpace) {
             },
             set:function (value) {
                 obj[prop] = value
-                renderData(vm,getNameSpace(nameSpace,prop))
+                let val = getValue(vm._data,getNameSpace(nameSpace,prop))
+                if(val instanceof Array){
+                    rebuild(vm,getNameSpace(nameSpace,prop))
+                    renderData(vm,getNameSpace(nameSpace,prop))
+                }else {
+                    renderData(vm,getNameSpace(nameSpace,prop))
+                }
             }
         })
         if(obj[prop] instanceof Object){
             proxyObj[prop] = constructproxy(vm,obj[prop],getNameSpace(nameSpace,prop))
         }
     }
-
     return proxyObj
 }
 

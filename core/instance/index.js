@@ -1,7 +1,8 @@
 import {initMixin} from "./init.js"
 import {renderMixin} from "./render.js"
 function Due(options) {
-    this._init(options)
+    this._init(options);
+    this._created.call(this);
     this._render()
 }
 initMixin(Due)

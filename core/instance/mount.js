@@ -1,6 +1,10 @@
 import VNode from "../vdom/vnode.js";
-import {prepareRender,getTempalte2VnodeMap,getvnode2TemplateMap} from "./render.js";
+import {prepareRender,getTempalte2VnodeMap,getvnode2TemplateMap,getVNodeByTemplate,clearMap} from "./render.js";
 import {vmodel} from "./grammer/vmodel.js";
+import {vforInit} from "./grammer/vfor.js";
+import {mergeAttr} from "../util/ObjectUtil.js";
+import {checkVBind} from "./grammer/vbind.js";
+import {checkVOn} from "./grammer/von.js"
 
 export function initMount(Due) {
     Due.prototype.$mount = function (el) {
@@ -23,20 +27,32 @@ function analysisAttr(vm,elm,parent) {
         if(attrNames.indexOf("v-model") > -1){
             vmodel(vm,elm,elm.getAttribute("v-model"))
         }
+        if(attrNames.indexOf("v-for") > -1){
+           return  vforInit(vm,elm,parent,elm.getAttribute("v-for"))
+        }
     }
 }
 
 function constructVNode(vm,elm,parent) {//深度优先搜索
-    analysisAttr(vm,elm,parent)
-    let vnode = null;
-    let children = [];
-    let text = getNodeText(elm);
-    let data = null;
-    let nodeType = elm.nodeType;
-    let tag = elm.nodeName;
-    vnode = new VNode(tag,elm,children,text,data,parent,nodeType);
-    let childs = vnode.elm.childNodes;
-    for(let i = 0;i < childs.length;i ++){
+    let vnode =  analysisAttr(vm,elm,parent);
+    if(vnode == null){
+        let children = [];
+        let text = getNodeText(elm);
+        let data = null;
+        let nodeType = elm.nodeType;
+        let tag = elm.nodeName;
+        vnode = new VNode(tag,elm,children,text,data,parent,nodeType);
+        if(elm.nodeType == 1 && elm.getAttribute("env")){
+            vnode.env = mergeAttr(vnode.env,JSON.parse(elm.getAttribute("env")))
+        }else {
+            vnode.env = mergeAttr(vnode.env,parent ? parent.env:{})
+        }
+    }
+    checkVBind(vm,vnode)
+    checkVOn(vm,vnode)
+    let childs = vnode.nodeType == 0 ? vnode.parent.elm.childNodes : vnode.elm.childNodes;
+    let len = vnode.nodeType == 0 ? vnode.parent.elm.childNodes.length : vnode.elm.childNodes.length;
+    for(let i = 0;i < len;i ++){
         let childNodes = constructVNode(vm,childs[i],vnode);
         if(childNodes instanceof VNode){
             vnode.children.push(childNodes)
@@ -55,3 +71,14 @@ function getNodeText(elm) {
     }
 }
 
+export function rebuild(vm,template) {
+    let virtualNode = getVNodeByTemplate(template);
+    for(let i =0 ; i <virtualNode.length;i++){
+        virtualNode[i].parent.elm.innerHTML = "";
+        virtualNode[i].parent.elm.appendChild(virtualNode[i].elm);
+        let result = constructVNode(vm,virtualNode[i].elm,virtualNode[i].parent);
+        virtualNode[i].parent.children = [result];
+        clearMap()
+        prepareRender(vm,vm._vnode)
+    }
+}

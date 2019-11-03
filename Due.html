@@ -3,13 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <title>mvvm</title>
+    <style>
+        .red{
+            color:red;
+        }
+        .blue{
+            color:blue
+        }
+    </style>
 </head>
 <body>
     <div id="test">
         你好，{{content}} {{description}}<br>
         <span>{{description}}</span><br>
-        <input type="text" v-model="obj.x">
+        <input type="text" v-model="obj.x" v-on:keydown = "enter">
         <br>{{obj.x}}
+
+        <ul>
+            <li v-for="(key) in list">姓名：{{key.a}},年龄：{{key.b}}</li>
+        </ul>
+        <img v-bind:src="imgSrc">
+        <br>
+        <span v-bind:class="haha">我的天</span>
+        <span v-bind:class="{red:y < 2, blue: y > 2}">我的地</span>
     </div>
     <script type="module">
         import Due from "./core/instance";
@@ -18,11 +34,25 @@
             data:{
                 content:"panda",
                 description:"panda say hello",
+                y:3,
                 obj:{
                     x:1,
                     y:2,
                 },
-                list:[{a:"panda",b:18},{a:"monkey",b:20}]
+                list:[{a:"panda",b:18},{a:"monkey",b:20}],
+                imgSrc:"a.jpg",
+                haha:"red"
+            },
+            methods:{
+                enter:function () {
+                    console.log("hello")
+                }
+            },
+            computed:{
+
+            },
+            created:function () {
+                console.log("创建完了")
             }
         });
     </script>
